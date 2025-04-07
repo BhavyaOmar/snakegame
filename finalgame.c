@@ -4,10 +4,12 @@
 #include <windows.H>
 #include <conio.h>
 
-#define height 20
-#define width 60
+#define height 10
+#define width 100
 
 int foodX, foodY, headX, headY, bodyX, bodyY, score, highestScore, gameOver = 0;
+
+int direction = 0; // Direction : 0 (right), 1 (up), 2 (left), 3 (down) ; Initially set to right
 
 // Node for snake body
 typedef struct Node
@@ -16,20 +18,32 @@ typedef struct Node
     struct Node *next;
 } Node;
 
-char direction = 'R';
+void hideCursor()
+{
+    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO cursorInfo;
+
+    // Get current cursor info
+    GetConsoleCursorInfo(consoleHandle, &cursorInfo);
+
+    cursorInfo.bVisible = FALSE; // Hide the cursor
+    SetConsoleCursorInfo(consoleHandle, &cursorInfo);
+}
+
+void init()
+{
+    srand(time(NULL));
+    score = 0;
+}
 
 // Linked List Operations
 
 // Initialize snake
 
-typedef struct
+struct Snake
 {
-    Node *head = NULL;
-    Node *tail = NULL;
-
-} Snake;
-
-Snake snake;
+    Node *head, *tail;
+} snake;
 
 void initSnake()
 {
@@ -52,20 +66,15 @@ void addTail(int x, int y)
     newTail->y = y;
     snake.tail->next = newTail;
     newTail->next = NULL;
-    snake.tial = newTail;
+    snake.tail = newTail;
 }
 
 void help()
 {
     printf("Welcome to the SNAKE GAME !!!");
 }
-void init()
-{
-    srand(time(NULL));
-    score = 0;
-}
 
-void foodCoordinates()
+void generateFood()
 {
 
     foodX = rand() % (width - 2) + 1;
@@ -86,19 +95,23 @@ void gameControl()
             key = getch();
             if (key == 72)
             { // Up
+                direction = 1;
                 headY--;
             }
             else if (key == 77)
             { // Right
+                direction = 0;
                 headX++;
             }
 
             else if (key == 80)
             { // Down
+                direction = 3;
                 headY++;
             }
             else if (key == 75)
             { // Left
+                direction = 2;
                 headX--;
             }
         }
@@ -125,6 +138,17 @@ void gameControl()
 
     // Game over if snake's head collides on its body
 }
+
+// void snakeMovement(){
+
+//     if(!_kbhit()){
+
+//         switch(direction){
+//             case 0;
+
+//         }
+//     }
+// }
 
 void display()
 {
@@ -162,24 +186,60 @@ void display()
                 printf("%c", 196);
             }
 
-            // Snake
-
-            else if (i == head->Y && j == head->X)
+            // Food
+            else if (i == foodY && j == foodX)
             {
 
-                printf("O"); // Head
+                printf("O");
             }
-            // else if (temp->next != NULL)
-            // {
-            //     while (temp)
-            //     {
-            //         printf("%c", 254); // Body
-            //     }
-            // }
 
+            // Snake
+            // Head
+            else if (i == snake.head->y && j == snake.head->x)
+            {
+
+                switch (direction)
+                {
+                case 0:
+                    printf(">");
+                    break;
+
+                case 1:
+                    printf("^");
+                    break;
+                case 2:
+                    printf("<");
+                    break;
+                case 3:
+                    printf("v");
+                    break;
+                }
+            }
+
+            // Body
             else
             {
-                printf(" ");
+                Node *temp = snake.head->next;
+
+                while (temp)
+                {
+
+                    if (i == temp->y && j == temp->x)
+                    {
+
+                        printf("0");
+                        break;
+                    }
+                    temp = temp->next;
+                }
+
+                // If the given coordinate does not even belong to snake's body, it must be white space
+
+                if (!temp)
+                {
+
+                    printf(" ");
+                }
             }
         }
         printf("\n");
@@ -188,6 +248,25 @@ void display()
 
 int main()
 {
+    init();
+    initSnake();
+    generateFood();
+    hideCursor();
 
-    display();
+    while (1)
+    {
+        if (_kbhit())
+        {
+
+            char key = getch();
+
+            if (key == 27)
+            {
+
+                break;
+            }
+        }
+        display();
+        // gameControl();
+    }
 }
