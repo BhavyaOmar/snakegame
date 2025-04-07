@@ -1,16 +1,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <windows.H>
-#include <conio.h>
+#include <unistd.h>
+#include <termios.h>
+#include<ncurses.h>
+#include <string.h>
 
+<<<<<<< HEAD
 #define height 10
 #define width 100
 #define leaderboard_limit 3 // will display top 3 performers
+=======
+#define height 25
+#define width 50
+#define leaderboard_limit 3 // will display top 3 performers
+
+char name[20];
+>>>>>>> e35278c (Linux Ubuntu compatible snake game)
 
 int foodX, foodY, score, highestScore = 0, gameOver = 0, wallType, sleepCount = 0;
 
-int direction = 0; // Direction : 0 (right), 1 (up), 2 (left), 3 (down) ; Initially set to right
+int direction = 0; 
+// Direction : 0 (right), 1 (up), 2 (left), 3 (down) ; Initially set to right
 
 // Node for snake body
 typedef struct Node
@@ -21,10 +32,15 @@ typedef struct Node
 
 struct Leaderboard
 {
+<<<<<<< HEAD
 
     char name[20];
     int userScore;
 
+=======
+    char name[20];
+    int userScore;
+>>>>>>> e35278c (Linux Ubuntu compatible snake game)
 } entry[leaderboard_limit], temp;
 
 void init()
@@ -68,9 +84,14 @@ void addTail(int x, int y)
 
 void help()
 {
-    printf("Welcome to the SNAKE GAME !!!\n\nEnter 1 for solid walls and 2 for teleport walls\n");
+    printf("Welcome to the SNAKE GAME !!!\n");
+    printf("Enter your username :");
+    scanf("%s", name);
+    printf("Enter 1 for solid walls and 2 for teleport walls\n");
     scanf("%d", &wallType);
     printf("Instructions :\n1. Use arrow keys to move the snake.\n");
+    getchar();
+    getchar();
 }
 void hideCursor()
 {
@@ -150,42 +171,37 @@ void moveSnake()
     }
 }
 
-void gameControl()
+void gameControl(WINDOW *win)
 {
+    timeout(0);
     int headX = snake.head->x;
     int headY = snake.head->y;
 
     // Arrow Controls
-    if (_kbhit())
-    {
         int changeDirection = direction;
-        char key = getch();
-        if (key == 224 || key == 0)
-        {
-            key = getch();
-
+        // Direction : 0 (right), 1 (up), 2 (left), 3 (down) ;
+        int key = wgetch(win);
             switch (key)
             {
 
-            case 72:
+            case KEY_UP:
                 // Up
                 changeDirection = 1;
                 break;
 
-            case 77:
+            case KEY_RIGHT:
                 // Right
                 changeDirection = 0;
                 break;
-            case 80:
+            case KEY_DOWN:
                 // Down
                 changeDirection = 3;
                 break;
-            case 75:
+            case KEY_LEFT:
                 // Left
                 changeDirection = 2;
                 break;
             }
-        }
 
         if ((direction == 0 && changeDirection != 2) || (direction == 1 && changeDirection != 3) || (direction == 2 && changeDirection != 0) || (direction == 3 && changeDirection != 1))
         {
@@ -196,14 +212,13 @@ void gameControl()
         {
             gameOver = 1;
         }
-    }
 
     if (wallType == 1)
     {
 
         // Solid wall collision
 
-        if (headX == 0 || headX == width - 1 || headY == 0 || headY == height - 1)
+        if (headX == 0 || headX == width - 1 || headY == 0 || headY == height)
         {
 
             gameOver = 1;
@@ -245,102 +260,80 @@ void gameControl()
     }
 }
 
+<<<<<<< HEAD
 void display()
+=======
+
+
+void display(WINDOW *win)
+>>>>>>> e35278c (Linux Ubuntu compatible snake game)
 {
-    system("cls");
-
-    for (int i = 0; i < height; i++)
-    {
-        for (int j = 0; j < width; j++)
-        {
-            Node *temp = snake.head; // From here we would traverse across the body to print the body
-
-            // Walls
-            if (j == 0 && i == 0)
-            {
-                printf("%c", 218);
-            }
-            else if (j == width - 1 && i == 0)
-            {
-                printf("%c", 191);
-            }
-            else if (j == 0 && i == height - 1)
-            {
-                printf("%c", 192);
-            }
-            else if (j == width - 1 && i == height - 1)
-            {
-                printf("%c", 217);
-            }
-            else if (j == 0 || j == width - 1)
-            {
-                printf("%c", 179);
-            }
-            else if (i == 0 || i == height - 1)
-            {
-                printf("%c", 196);
-            }
-
-            // Food
-            else if (i == foodY && j == foodX)
-            {
-
-                printf("O");
-            }
-
-            // Snake
-            // Head
-            else if (i == snake.head->y && j == snake.head->x)
-            {
-
-                switch (direction)
-                {
-                case 0:
-                    printf(">");
-                    break;
-
-                case 1:
-                    printf("^");
-                    break;
-                case 2:
-                    printf("<");
-                    break;
-                case 3:
-                    printf("v");
-                    break;
+    werase(win);
+    box(win, 0, 0);
+    
+    for (int i = 1; i < height - 1; i++) {
+        for (int j = 1; j < width - 1; j++) {
+        //Food
+            if (i == foodY && j == foodX) {
+                mvwprintw(win, i, j, "@");
+            } else if (i == snake.head->y && j == snake.head->x) {
+                switch (direction) {
+                //snake head
+                    case 0: mvwprintw(win, i, j, ">"); break;
+                    case 1: mvwprintw(win, i, j, "^"); break;
+                    case 2: mvwprintw(win, i, j, "<"); break;
+                    case 3: mvwprintw(win, i, j, "v"); break;
                 }
-            }
-
-            // Body
-            else
-            {
+            } else {
                 Node *temp = snake.head->next;
-
-                while (temp)
-                {
-
-                    if (i == temp->y && j == temp->x)
-                    {
-
-                        printf("0");
+                while (temp) {
+                //snake body
+                    if (i == temp->y && j == temp->x) {
+                        mvwprintw(win, i, j, "0");
                         break;
                     }
                     temp = temp->next;
                 }
-
-                // If the given coordinate does not even belong to snake's body, it must be white space
-
-                if (!temp)
-                {
-
-                    printf(" ");
-                }
             }
         }
-        printf("\n");
+    }
+    mvwprintw(win, height-1, 1, "Score: %d", score);
+    wrefresh(win);
+}
+
+// Leaderboard Functions
+
+void loadHighScore()
+{
+
+    FILE *file = fopen("leaderboard.txt", "r");
+    if (!file) {
+    // Initialize default values
+    for (int i = 0; i < leaderboard_limit; i++) {
+        strcpy(entry[i].name, "None");
+        entry[i].userScore = 0;
+    }
+    }
+
+    int i = 0;
+
+    while (i < leaderboard_limit && fscanf(file, "%s %d", entry[i].name, &entry[i].userScore) == 2)
+    {
+        i++;
+    }
+    fclose(file);
+
+    // If entries are less than 3, fill with None 0
+
+    for (; i < leaderboard_limit; i++)
+    {
+        strcpy(entry[i].name, "None");
+
+        entry[i].userScore = 0;
     }
 }
 
+<<<<<<< HEAD
 // Leaderboard Functions
 
 void loadHighScore()
@@ -366,6 +359,8 @@ void loadHighScore()
     }
 }
 
+=======
+>>>>>>> e35278c (Linux Ubuntu compatible snake game)
 void updateLeaderboard(char playerName[20], int playerScore)
 {
 
@@ -374,7 +369,11 @@ void updateLeaderboard(char playerName[20], int playerScore)
 
         if (playerScore > entry[i].userScore)
         {
+<<<<<<< HEAD
             for (int j = leaderboard_limit; j > i; j--)
+=======
+            for (int j = leaderboard_limit-1; j > i; j--)
+>>>>>>> e35278c (Linux Ubuntu compatible snake game)
             { // Shifting one level down
 
                 entry[j] = entry[j - 1];
@@ -414,25 +413,41 @@ void gameOverDisplay()
         printf("\nScore : %d", score);
     }
 }
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> e35278c (Linux Ubuntu compatible snake game)
 int main()
 {
     char name[20];
 
     help();
+<<<<<<< HEAD
     printf("Enter your username :");
     scanf("%s", name);
+=======
+    loadHighScore();
+    initscr();
+    noecho();
+    curs_set(FALSE);
+    
+    WINDOW *win = newwin(height+2, width+2, 1, 1);
+    keypad(win, TRUE);
+    nodelay(win, TRUE);
+    
+>>>>>>> e35278c (Linux Ubuntu compatible snake game)
     init();
     initSnake();
     loadHighScore();
     generateFood();
-    hideCursor();
 
     while (!gameOver)
     {
-
-        display();
-        gameControl();
+        display(win);
+        gameControl(win);
         moveSnake();
+<<<<<<< HEAD
         printf("\nScore : %d", score);
 
         // Gradually increasing the speed as score increases
@@ -448,3 +463,12 @@ int main()
     gameOverDisplay();
     updateLeaderboard(name, score);
 }
+=======
+        usleep(200000);
+    }
+    endwin();
+    gameOverDisplay();
+    updateLeaderboard(name, score);
+    return 0;
+}
+>>>>>>> e35278c (Linux Ubuntu compatible snake game)
