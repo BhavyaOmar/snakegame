@@ -6,8 +6,9 @@
 
 #define height 10
 #define width 100
+#define leaderboard_limit 3 // will display top 3 performers
 
-int foodX, foodY, score, highestScore, gameOver = 0, wallType;
+int foodX, foodY, score, highestScore = 0, gameOver = 0, wallType;
 
 int direction = 0; // Direction : 0 (right), 1 (up), 2 (left), 3 (down) ; Initially set to right
 
@@ -18,17 +19,13 @@ typedef struct Node
     struct Node *next;
 } Node;
 
-void hideCursor()
+struct Leaderboard
 {
-    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_CURSOR_INFO cursorInfo;
 
-    // Get current cursor info
-    GetConsoleCursorInfo(consoleHandle, &cursorInfo);
+    char name[20];
+    int userScore;
 
-    cursorInfo.bVisible = FALSE; // Hide the cursor
-    SetConsoleCursorInfo(consoleHandle, &cursorInfo);
-}
+} entry[leaderboard_limit], temp;
 
 void init()
 {
@@ -74,6 +71,17 @@ void help()
     printf("Welcome to the SNAKE GAME !!!\n\nEnter 1 for solid walls and 2 for teleport walls\n");
     scanf("%d", &wallType);
     printf("Instructions :\n1. Use arrow keys to move the snake.\n");
+}
+void hideCursor()
+{
+    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO cursorInfo;
+
+    // Get current cursor info
+    GetConsoleCursorInfo(consoleHandle, &cursorInfo);
+
+    cursorInfo.bVisible = FALSE; // Hide the cursor
+    SetConsoleCursorInfo(consoleHandle, &cursorInfo);
 }
 
 void generateFood()
@@ -237,21 +245,6 @@ void gameControl()
     }
 }
 
-// void snakeMovement(){
-
-//     if(!_kbhit()){
-
-//         switch(direction){
-//             case 0;
-
-//         }
-//     }
-// }
-
-// void moveSnake(){
-
-// }
-
 void display()
 {
     system("cls");
@@ -348,11 +341,90 @@ void display()
     }
 }
 
+// Leaderboard Functions
+
+void loadHighScore()
+{
+
+    FILE *file = fopen("leaderboard.txt", "r");
+
+    int i = 0;
+
+    while (i < leaderboard_limit && fscanf(file, "%s %d", entry[i].name, entry[i].userScore) == 2)
+    {
+        i++;
+    }
+    fclose(file);
+
+    // If entries are less than 3, fill with None 0
+
+    for (; i < leaderboard_limit; i++)
+    {
+        strcpy(entry[i].name, "None");
+
+        entry[i].userScore = 0;
+    }
+}
+
+void updateLeaderboard(char playerName[20], int playerScore)
+{
+
+    for (int i = leaderboard_limit - 1; i >= 0; i--)
+    {
+
+        if (playerScore > entry[i].userScore)
+        {
+            for (int j = leaderboard_limit; j > i; j--)
+            { // Shifting one level down
+
+                entry[j] = entry[j - 1];
+            }
+
+            // Inserting the new user
+
+            strcpy(entry[i].name, playerName);
+            entry[i].userScore = playerScore;
+            break;
+        }
+    }
+
+    // Save Leaderboard
+
+    FILE *file = fopen("leaderboard.txt", "w");
+
+    if (file)
+    {
+
+        for (int i = 0; i < leaderboard_limit; i++)
+        {
+
+            fprintf(file, "%s %d\n", entry[i].name, entry[i].userScore);
+        }
+        fclose(file);
+    }
+}
+
+void gameOverDisplay()
+{
+
+    if (gameOver)
+    {
+
+        printf("\n=============\nGAME OVER !\n=============");
+        printf("\nScore : %d", score);
+    }
+}
+
 int main()
 {
+    char name[20];
+
     help();
+    printf("Enter your username :");
+    scanf("%s", name);
     init();
     initSnake();
+    loadHighScore();
     generateFood();
     hideCursor();
 
@@ -362,7 +434,9 @@ int main()
         display();
         gameControl();
         moveSnake();
-        Sleep(200);
+        Sleep(100);
         printf("\nScore : %d", score);
     }
+    gameOverDisplay();
+    updateLeaderboard(name, score);
 }
