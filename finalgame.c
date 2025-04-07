@@ -7,7 +7,7 @@
 #define height 10
 #define width 100
 
-int foodX, foodY, score, highestScore, gameOver = 0;
+int foodX, foodY, score, highestScore, gameOver = 0, wallType;
 
 int direction = 0; // Direction : 0 (right), 1 (up), 2 (left), 3 (down) ; Initially set to right
 
@@ -51,7 +51,7 @@ void initSnake()
     snake.head = (Node *)malloc(sizeof(Node));
     snake.head->next = NULL;
 
-    // starting the game from the center of the screen...
+    // Initiation snake from the center of the display screen...
 
     snake.head->x = width / 2;
     snake.head->y = height / 2;
@@ -71,7 +71,9 @@ void addTail(int x, int y)
 
 void help()
 {
-    printf("Welcome to the SNAKE GAME !!!");
+    printf("Welcome to the SNAKE GAME !!!\n\nEnter 1 for solid walls and 2 for teleport walls\n");
+    scanf("%d", &wallType);
+    printf("Instructions :\n1. Use arrow keys to move the snake.\n");
 }
 
 void generateFood()
@@ -188,26 +190,51 @@ void gameControl()
         }
     }
 
-    // Instead of wall collision, if snake goes in from one side, it would get out from other side
+    if (wallType == 1)
+    {
 
-    if (headX < 0)
-    {
-        snake.head->x = width - 2;
+        // Solid wall collision
+
+        if (headX == 0 || headX == width - 1 || headY == 0 || headY == height - 1)
+        {
+
+            gameOver = 1;
+        }
     }
-    else if (headX > width - 1)
+    else
     {
-        snake.head->x = 1;
-    }
-    else if (headY < 0)
-    {
-        snake.head->y = height - 2;
-    }
-    else if (headY > height - 1)
-    {
-        snake.head->y = 1;
+        // Teleport Walls, even if user gives invalid input it would be the default wall type
+
+        if (headX < 0)
+        {
+            snake.head->x = width - 2;
+        }
+        else if (headX > width - 1)
+        {
+            snake.head->x = 1;
+        }
+        else if (headY < 0)
+        {
+            snake.head->y = height - 2;
+        }
+        else if (headY > height - 1)
+        {
+            snake.head->y = 1;
+        }
     }
 
     // Game over if snake's head collides on its body
+
+    Node *temp = snake.head->next;
+    while (temp)
+    {
+        if (snake.head->x == temp->x && snake.head->y == temp->y)
+        {
+            gameOver = 1;
+            break;
+        }
+        temp = temp->next;
+    }
 }
 
 // void snakeMovement(){
@@ -323,6 +350,7 @@ void display()
 
 int main()
 {
+    help();
     init();
     initSnake();
     generateFood();
@@ -335,5 +363,6 @@ int main()
         gameControl();
         moveSnake();
         Sleep(200);
+        printf("\nScore : %d", score);
     }
 }
