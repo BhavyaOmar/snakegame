@@ -7,7 +7,7 @@
 #define height 10
 #define width 100
 
-int foodX, foodY, headX, headY, bodyX, bodyY, score, highestScore, gameOver = 0;
+int foodX, foodY, score, highestScore, gameOver = 0;
 
 int direction = 0; // Direction : 0 (right), 1 (up), 2 (left), 3 (down) ; Initially set to right
 
@@ -81,59 +81,130 @@ void generateFood()
     foodY = rand() % (height - 2) + 1;
 }
 
+void moveSnake()
+{
+
+    int newX = snake.head->x;
+    int newY = snake.head->y;
+
+    // Motion
+
+    switch (direction)
+    {
+
+    case 0:
+        newX++;
+        break;
+
+    case 1:
+        newY--;
+        break;
+    case 2:
+        newX--;
+        break;
+    case 3:
+        newY++;
+        break;
+    }
+
+    // To make the snake move, we would create a new node at the 'new' coordinate and delete the last tail node from the old ones
+
+    Node *newHead = (Node *)malloc(sizeof(Node));
+
+    newHead->x = newX;
+    newHead->y = newY;
+    newHead->next = snake.head;
+    snake.head = newHead;
+
+    // If food eaten increase the size, else remove tail
+
+    if (newX == foodX && newY == foodY)
+    {
+        score++;
+        generateFood();
+    }
+    else
+    {
+        Node *prev = NULL;
+        Node *curr = snake.head;
+
+        while (curr->next)
+        {
+            prev = curr;
+            curr = curr->next;
+        }
+
+        free(curr);
+        prev->next = NULL;
+        snake.tail = prev;
+    }
+}
+
 void gameControl()
 {
-    headX = snake.head->x;
-    headY = snake.head->y;
+    int headX = snake.head->x;
+    int headY = snake.head->y;
 
     // Arrow Controls
     if (_kbhit())
     {
+        int changeDirection = direction;
         char key = getch();
-        if (key == 224)
+        if (key == 224 || key == 0)
         {
             key = getch();
-            if (key == 72)
-            { // Up
-                direction = 1;
-                headY--;
-            }
-            else if (key == 77)
-            { // Right
-                direction = 0;
-                headX++;
-            }
 
-            else if (key == 80)
-            { // Down
-                direction = 3;
-                headY++;
+            switch (key)
+            {
+
+            case 72:
+                // Up
+                changeDirection = 1;
+                break;
+
+            case 77:
+                // Right
+                changeDirection = 0;
+                break;
+            case 80:
+                // Down
+                changeDirection = 3;
+                break;
+            case 75:
+                // Left
+                changeDirection = 2;
+                break;
             }
-            else if (key == 75)
-            { // Left
-                direction = 2;
-                headX--;
-            }
+        }
+
+        if ((direction == 0 && changeDirection != 2) || (direction == 1 && changeDirection != 3) || (direction == 2 && changeDirection != 0) || (direction == 3 && changeDirection != 1))
+        {
+
+            direction = changeDirection;
+        }
+        else if (key == 27)
+        {
+            gameOver = 1;
         }
     }
 
     // Instead of wall collision, if snake goes in from one side, it would get out from other side
 
-    if (headX == 0)
+    if (headX < 0)
     {
-        snake.head->y = width - 2;
+        snake.head->x = width - 2;
     }
-    else if (headX == width - 1)
-    {
-        snake.head->y = 1;
-    }
-    else if (headY == 0)
-    {
-        snake.head->x = height - 2;
-    }
-    else if (headY == height - 1)
+    else if (headX > width - 1)
     {
         snake.head->x = 1;
+    }
+    else if (headY < 0)
+    {
+        snake.head->y = height - 2;
+    }
+    else if (headY > height - 1)
+    {
+        snake.head->y = 1;
     }
 
     // Game over if snake's head collides on its body
@@ -148,6 +219,10 @@ void gameControl()
 
 //         }
 //     }
+// }
+
+// void moveSnake(){
+
 // }
 
 void display()
@@ -253,20 +328,12 @@ int main()
     generateFood();
     hideCursor();
 
-    while (1)
+    while (!gameOver)
     {
-        if (_kbhit())
-        {
 
-            char key = getch();
-
-            if (key == 27)
-            {
-
-                break;
-            }
-        }
         display();
-        // gameControl();
+        gameControl();
+        moveSnake();
+        Sleep(200);
     }
 }
