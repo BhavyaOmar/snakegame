@@ -8,7 +8,7 @@
 #define width 100
 #define leaderboard_limit 3 // will display top 3 performers
 
-int foodX, foodY, score, highestScore = 0, gameOver = 0, wallType;
+int foodX, foodY, score, highestScore = 0, gameOver = 0, wallType, sleepCount = 0;
 
 int direction = 0; // Direction : 0 (right), 1 (up), 2 (left), 3 (down) ; Initially set to right
 
@@ -350,7 +350,7 @@ void loadHighScore()
 
     int i = 0;
 
-    while (i < leaderboard_limit && fscanf(file, "%s %d", entry[i].name, entry[i].userScore) == 2)
+    while (i < leaderboard_limit && fscanf(file, "%s %d", entry[i].name, &entry[i].userScore) == 2)
     {
         i++;
     }
@@ -414,7 +414,6 @@ void gameOverDisplay()
         printf("\nScore : %d", score);
     }
 }
-
 int main()
 {
     char name[20];
@@ -434,8 +433,17 @@ int main()
         display();
         gameControl();
         moveSnake();
-        Sleep(100);
         printf("\nScore : %d", score);
+
+        // Gradually increasing the speed as score increases
+        if (score < 45)
+        {
+            Sleep(200 - (score * 4));
+        }
+        else
+        {
+            Sleep(10);
+        }
     }
     gameOverDisplay();
     updateLeaderboard(name, score);
